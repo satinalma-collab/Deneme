@@ -1,0 +1,53 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f5f7;
+    margin: 0;
+    padding: 20px;
+}
+
+.board-container {
+    width: 100%;
+}
+
+.board-title {
+    color: #172b4d;
+    margin-bottom: 20px;
+}
+
+.lists-container {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.list {
+    background-color: #ebecf0;
+    border-radius: 3px;
+    width: 272px;
+    padding: 10px;
+    flex-shrink: 0;
+}
+
+.list-title {
+    font-size: 16px;
+    color: #172b4d;
+    margin: 0 0 10px;
+}
+
+.cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 rgba(9,30,66,.25);
+    padding: 10px;
+    cursor: pointer;
+}
+
+.card:hover {
+    background-color: #f4f5f7;
+}

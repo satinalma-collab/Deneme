@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "list_id": 1,
+        "content": "Setup the project structure"
+    },
+    {
+        "id": 2,
+        "list_id": 1,
+        "content": "Create initial data"
+    },
+    {
+        "id": 3,
+        "list_id": 2,
+        "content": "Develop the backend logic"
+    }
+]
