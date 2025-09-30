@@ -1,53 +1,283 @@
+/* --- Genel ve Temel Stiller --- */
+:root {
+    --primary-color: #0079bf;
+    --secondary-color: #026aa7;
+    --background-light: #f4f4f4;
+    --background-board: #0079bf;
+    --text-dark: #172b4d;
+    --text-light: #fff;
+    --list-bg: #ebecf0;
+    --card-bg: #fff;
+    --border-color: #dfe1e6;
+    --success-color: #61bd4f;
+    --danger-color: #eb5a46;
+    --box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f5f7;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background-light);
+    color: var(--text-dark);
     margin: 0;
-    padding: 20px;
+    line-height: 1.6;
 }
 
-.board-container {
-    width: 100%;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
-.board-title {
-    color: #172b4d;
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+/* --- Başlık (Header) ve Navigasyon --- */
+.main-header {
+    background-color: var(--primary-color);
+    padding: 10px 0;
+    box-shadow: var(--box-shadow);
+    color: var(--text-light);
+}
+.main-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-light);
+}
+.logo:hover { text-decoration: none; }
+
+.main-nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.main-nav a, .user-greeting {
+    color: var(--text-light);
+    font-weight: 500;
+    position: relative;
+}
+.notification-badge {
+    background-color: var(--danger-color);
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    position: absolute;
+    top: -5px;
+    right: -10px;
+}
+
+/* --- Formlar ve Butonlar --- */
+.form-container {
+    background-color: var(--card-bg);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: var(--box-shadow);
+    max-width: 450px;
+    margin: 40px auto;
+}
+.form-container h2 {
+    margin-top: 0;
+    text-align: center;
+}
+.form-container p {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #5e6c84;
+}
+.form-group {
     margin-bottom: 20px;
 }
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.form-group input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+.btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.btn:hover {
+    background-color: var(--secondary-color);
+}
+.form-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
 
+/* --- Kontrol Paneli (Dashboard) --- */
+.dashboard-header {
+    margin: 30px 0;
+}
+.project-list ul {
+    list-style: none;
+    padding: 0;
+}
+.project-list li a {
+    display: block;
+    background: var(--card-bg);
+    padding: 20px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: var(--box-shadow);
+    font-size: 1.2rem;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+.project-list li a:hover {
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+/* --- Proje Panosu (Board) --- */
+body.board-active {
+    background-color: var(--background-board);
+}
+.project-header {
+    color: var(--text-light);
+    padding: 10px 0;
+}
+.board-container {
+    display: flex;
+    overflow-x: auto;
+    padding: 20px 0;
+}
 .lists-container {
     display: flex;
     gap: 10px;
-    align-items: flex-start;
 }
-
 .list {
-    background-color: #ebecf0;
-    border-radius: 3px;
-    width: 272px;
-    padding: 10px;
+    background-color: var(--list-bg);
+    width: 280px;
     flex-shrink: 0;
+    padding: 10px;
+    border-radius: 4px;
 }
-
 .list-title {
-    font-size: 16px;
-    color: #172b4d;
-    margin: 0 0 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 5px 8px;
 }
-
 .cards {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    min-height: 20px; /* For dropping cards in empty lists */
 }
-
 .card {
-    background-color: #fff;
-    border-radius: 3px;
-    box-shadow: 0 1px 0 rgba(9,30,66,.25);
+    background-color: var(--card-bg);
     padding: 10px;
+    border-radius: 3px;
+    box-shadow: var(--box-shadow);
+    cursor: pointer;
+}
+.card:hover {
+    background-color: #f7f7f7;
+}
+.card-assignee {
+    font-size: 0.8rem;
+    color: #5e6c84;
+    margin-top: 8px;
+}
+.assign-form select {
+    width: 100%;
+    margin-top: 10px;
+    padding: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    background-color: #f4f4f4;
+}
+.add-card-form-container textarea {
+    width: 100%;
+    border: none;
+    border-radius: 3px;
+    padding: 8px;
+    margin-bottom: 5px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+.btn-add-card {
+    background-color: var(--success-color);
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 3px;
     cursor: pointer;
 }
 
-.card:hover {
-    background-color: #f4f5f7;
+/* --- Bildirimler Sayfası --- */
+.notification-list {
+    list-style: none;
+    padding: 0;
+}
+.notification-item {
+    background-color: var(--card-bg);
+    margin-bottom: 10px;
+    border-left: 5px solid var(--border-color);
+    border-radius: 4px;
+}
+.notification-item.unread {
+    border-left-color: var(--primary-color);
+    background-color: #f0f8ff;
+}
+.notification-item a {
+    display: block;
+    padding: 15px;
+    color: var(--text-dark);
+}
+.notification-item a:hover {
+    text-decoration: none;
+    background-color: #f9f9f9;
+}
+.notification-timestamp {
+    font-size: 0.8rem;
+    color: #5e6c84;
+    margin-top: 5px;
 }
