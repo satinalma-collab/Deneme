@@ -107,7 +107,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_project'])) {
                     <?php if ($project['owner_id'] === $current_user_id): ?>
                         <form action="<?php echo url('dashboard.php'); ?>" method="post" onsubmit="return confirm('Bu projeyi ve içindeki tüm verileri kalıcı olarak silmek istediğinizden emin misiniz?');" class="delete-project-form">
                             <input type="hidden" name="project_id_to_delete" value="<?php echo $project['id']; ?>">
-                            <button type="submit" name="delete_project" class="btn-delete">Sil</button>
+                            <button type="submit" name="delete_project" class="btn-delete" title="Projeyi Sil">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
                         </form>
                     <?php endif; ?>
                 </li>
@@ -115,11 +119,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_project'])) {
         </ul>
     <?php endif; ?>
 </div>
-
-<style>
-.project-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 20px; margin-bottom: 10px; border-radius: 5px; box-shadow: var(--box-shadow); }
-.project-item a { flex-grow: 1; text-decoration: none; font-size: 1.2rem; font-weight: 500; color: var(--text-dark); }
-.delete-project-form button.btn-delete { background-color: var(--danger-color); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
-</style>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

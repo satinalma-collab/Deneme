@@ -187,7 +187,12 @@ foreach ($project['members'] as $member_id) {
                     <?php endforeach; ?>
                 </div>
                 <div class="add-card-form-container">
-                    <button class="btn-open-add-card-modal" data-list-id="<?php echo $list['id']; ?>">+ Yeni bir kart ekle</button>
+                    <button class="btn-open-add-card-modal" data-list-id="<?php echo $list['id']; ?>">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="margin-right: 8px;">
+                            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                        </svg>
+                        <span>Yeni kart ekle</span>
+                    </button>
                 </div>
             </div>
         <?php endforeach; ?>
