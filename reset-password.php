@@ -95,12 +95,4 @@ if ($token_is_valid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['re
     <?php endif; ?>
 </div>
 
-<?php
-// login.php'ye yönlendirme mesajı için
-if (isset($_GET['password_reset_success']) && $_GET['password_reset_success'] === 'true') {
-    $success_message = "Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.";
-    echo "<div class='form-container'><div class='alert alert-success'>{$success_message}</div></div>";
-}
-?>
-
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -11,9 +11,11 @@ if (is_logged_in()) {
 $error_message = '';
 $success_message = '';
 
-// Kayıt sayfasından yönlendirme varsa başarı mesajı göster
+// Kayıt veya şifre sıfırlama sonrası başarı mesajlarını yönet
 if (isset($_GET['registered']) && $_GET['registered'] === 'true') {
     $success_message = "Kaydınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.";
+} elseif (isset($_GET['password_reset_success']) && $_GET['password_reset_success'] === 'true') {
+    $success_message = "Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.";
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
