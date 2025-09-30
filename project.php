@@ -61,30 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_list'])) {
     }
 }
 
-// Kart Ekleme (Gelişmiş veri yapısıyla)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_card'])) {
-    $card_title = trim($_POST['card_title'] ?? '');
-    $list_id = filter_input(INPUT_POST, 'list_id', FILTER_VALIDATE_INT);
-    if (!empty($card_title) && $list_id) {
-        $new_card_id = empty($project['cards']) ? 1 : max(array_column($project['cards'], 'id')) + 1;
-        $new_card = [
-            'id' => $new_card_id,
-            'list_id' => $list_id,
-            'title' => $card_title,
-            'description' => '',
-            'assigned_to' => null,
-            'dueDate' => null,
-            'labels' => [],
-            'comments' => []
-        ];
-        $all_projects[$project_key]['cards'][] = $new_card;
-        if (write_db(PROJECTS_FILE, $all_projects)) {
-            // Modal'ı otomatik açmak için parametre ile yönlendir
-            header('Location: ' . url('project.php?id=' . $project_id . '&open_card=' . $new_card_id));
-            exit;
-        }
-    }
-}
 
 // Üye Ekleme
 if ($is_owner && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_member'])) {
@@ -183,7 +159,7 @@ foreach ($project['members'] as $member_id) {
                 <div class="cards">
                     <?php foreach ($project['cards'] as $card): ?>
                         <?php if ($card['list_id'] === $list['id']): ?>
-                            <div class="card" data-card-id="<?php echo $card['id']; ?>" draggable="true">
+                            <div class="card task-card" data-card-id="<?php echo $card['id']; ?>" draggable="true">
                                 <div class="card-title"><?php echo htmlspecialchars($card['title']); ?></div>
                                 <?php if ($card['assigned_to']):
                                     $assignee = get_user_by_id($card['assigned_to']); ?>
@@ -211,11 +187,7 @@ foreach ($project['members'] as $member_id) {
                     <?php endforeach; ?>
                 </div>
                 <div class="add-card-form-container">
-                    <form action="<?php echo url('project.php?id=' . $project_id); ?>" method="post">
-                        <input type="hidden" name="list_id" value="<?php echo $list['id']; ?>">
-                        <textarea name="card_title" placeholder="+ Yeni bir kart ekle..." required></textarea>
-                        <button type="submit" name="add_card" class="btn-add-card">Ekle</button>
-                    </form>
+                    <button class="btn-open-add-card-modal" data-list-id="<?php echo $list['id']; ?>">+ Yeni bir kart ekle</button>
                 </div>
             </div>
         <?php endforeach; ?>

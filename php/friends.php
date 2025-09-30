@@ -71,9 +71,9 @@ function accept_friend_request($user_id, $requester_id) {
     $users[$user_key]['friends'][] = $requester_id;
     $users[$requester_key]['friends'][] = $user_id;
 
-    // İstekleri temizle
-    $users[$user_key]['friend_requests_received'] = array_diff($users[$user_key]['friend_requests_received'], [$requester_id]);
-    $users[$requester_key]['friend_requests_sent'] = array_diff($users[$requester_key]['friend_requests_sent'], [$user_id]);
+    // İstekleri temizle ve diziyi yeniden indeksle
+    $users[$user_key]['friend_requests_received'] = array_values(array_diff($users[$user_key]['friend_requests_received'], [$requester_id]));
+    $users[$requester_key]['friend_requests_sent'] = array_values(array_diff($users[$requester_key]['friend_requests_sent'], [$user_id]));
 
     write_db(USERS_FILE, $users);
 }
@@ -96,9 +96,9 @@ function decline_friend_request($user_id, $requester_id) {
 
     if ($user_key === null || $requester_key === null) return;
 
-    // İstekleri temizle
-    $users[$user_key]['friend_requests_received'] = array_diff($users[$user_key]['friend_requests_received'], [$requester_id]);
-    $users[$requester_key]['friend_requests_sent'] = array_diff($users[$requester_key]['friend_requests_sent'], [$user_id]);
+    // İstekleri temizle ve diziyi yeniden indeksle
+    $users[$user_key]['friend_requests_received'] = array_values(array_diff($users[$user_key]['friend_requests_received'], [$requester_id]));
+    $users[$requester_key]['friend_requests_sent'] = array_values(array_diff($users[$requester_key]['friend_requests_sent'], [$user_id]));
 
     write_db(USERS_FILE, $users);
 }

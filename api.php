@@ -154,6 +154,53 @@ switch ($action) {
         }
         break;
 
+    case 'add_card':
+        $project_id = filter_var($request_data['projectId'] ?? 0, FILTER_VALIDATE_INT);
+        $list_id = filter_var($request_data['listId'] ?? 0, FILTER_VALIDATE_INT);
+        $title = trim($request_data['title'] ?? '');
+        $description = trim($request_data['description'] ?? '');
+        $current_user_id = get_current_user_id();
+
+        if (!$project_id || !$list_id || empty($title)) {
+            $response['message'] = 'Eksik parametreler (proje, liste veya başlık).';
+            break;
+        }
+
+        $all_projects = read_db(PROJECTS_FILE);
+        $project_key = null;
+        foreach ($all_projects as $key => $p) {
+            if ($p['id'] === $project_id) {
+                $project_key = $key;
+                break;
+            }
+        }
+
+        if ($project_key === null || !in_array($current_user_id, $all_projects[$project_key]['members'])) {
+            $response['message'] = 'Bu işlem için yetkiniz yok.';
+            break;
+        }
+
+        $new_card_id = empty($all_projects[$project_key]['cards']) ? 1 : max(array_column($all_projects[$project_key]['cards'], 'id')) + 1;
+        $new_card = [
+            'id' => $new_card_id,
+            'list_id' => $list_id,
+            'title' => $title,
+            'description' => $description,
+            'assigned_to' => null,
+            'dueDate' => null,
+            'labels' => [],
+            'comments' => []
+        ];
+
+        $all_projects[$project_key]['cards'][] = $new_card;
+
+        if (write_db(PROJECTS_FILE, $all_projects)) {
+            $response = ['success' => true, 'card' => $new_card, 'message' => 'Kart başarıyla eklendi.'];
+        } else {
+            $response['message'] = 'Kart eklenirken bir hata oluştu.';
+        }
+        break;
+
     default:
         $response['message'] = 'Bilinmeyen eylem.';
         break;
