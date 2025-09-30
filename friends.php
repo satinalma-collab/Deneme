@@ -27,20 +27,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
     }
 }
 
-// Arkadaşlık İsteği Yanıtlama
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['handle_request'])) {
+// Arkadaşlık İsteği Kabul Etme
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_request'])) {
     $requester_id = filter_input(INPUT_POST, 'requester_id', FILTER_VALIDATE_INT);
-    $action = $_POST['action'] ?? ''; // 'accept' or 'decline'
+    accept_friend_request($current_user_id, $requester_id);
+    $message = "Arkadaşlık isteği kabul edildi.";
+    $message_type = 'success';
+    // Sayfanın yeniden yüklenmesiyle verileri güncelle
+    header("Location: " . url('friends.php?accepted=true'));
+    exit;
+}
 
-    if ($action === 'accept') {
-        accept_friend_request($current_user_id, $requester_id);
-        $message = "Arkadaşlık isteği kabul edildi.";
-        $message_type = 'success';
-    } elseif ($action === 'decline') {
-        decline_friend_request($current_user_id, $requester_id);
-        $message = "Arkadaşlık isteği reddedildi.";
-        $message_type = 'info';
-    }
+// Arkadaşlık İsteği Reddetme
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['decline_request'])) {
+    $requester_id = filter_input(INPUT_POST, 'requester_id', FILTER_VALIDATE_INT);
+    decline_friend_request($current_user_id, $requester_id);
+    $message = "Arkadaşlık isteği reddedildi.";
+    $message_type = 'info';
+     // Sayfanın yeniden yüklenmesiyle verileri güncelle
+    header("Location: " . url('friends.php?declined=true'));
+    exit;
 }
 
 
@@ -89,8 +95,8 @@ foreach ($current_user_data['friends'] as $friend_id) {
                         <span><?php echo htmlspecialchars($requester['username']); ?></span>
                         <form action="<?php echo url('friends.php'); ?>" method="post" class="inline-form">
                             <input type="hidden" name="requester_id" value="<?php echo $requester['id']; ?>">
-                            <button type="submit" name="handle_request" value="accept" class="btn btn-success">Kabul Et</button>
-                            <button type="submit" name="handle_request" value="decline" class="btn btn-danger">Reddet</button>
+                            <button type="submit" name="accept_request" class="btn btn-success">Kabul Et</button>
+                            <button type="submit" name="decline_request" class="btn btn-danger">Reddet</button>
                         </form>
                     </li>
                 <?php endforeach; ?>

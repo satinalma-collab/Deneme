@@ -5,6 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const projectId = boardContainer.dataset.projectId;
 
+    // Sayfa yüklendiğinde URL'yi kontrol et ve gerekirse modal'ı aç
+    const urlParams = new URLSearchParams(window.location.search);
+    const cardToOpen = urlParams.get('open_card');
+    if (cardToOpen) {
+        openCardModal(cardToOpen);
+        // Tarayıcı geçmişini temizle, böylece yenileme modal'ı tekrar açmaz
+        window.history.replaceState({}, document.title, window.location.pathname + '?id=' + projectId);
+    }
+
     // --- Sürükle ve Bırak (Drag and Drop) Mantığı ---
     initializeDragAndDrop();
 
@@ -13,10 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalContentWrapper = document.getElementById('modal-card-content-wrapper');
     const closeModalBtn = document.querySelector('.modal-close-btn');
 
-    // Her kart için modal açma olayını ekle
-    document.querySelectorAll('.card').forEach(card => {
+    // Sadece gerçek görev kartları için modal açma olayını ekle
+    document.querySelectorAll('.cards .card').forEach(card => {
         card.addEventListener('click', (e) => {
-            // Sürükleme işlemiyle karışmaması için
+            // Atama formuna tıklandığında modalın açılmasını engelle
             if (e.target.closest('.assign-form')) return;
 
             const cardId = card.dataset.cardId;

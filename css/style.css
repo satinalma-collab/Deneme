@@ -213,18 +213,26 @@ body.board-active {
 }
 .card {
     background-color: var(--card-bg);
-    padding: 10px;
-    border-radius: 3px;
+    padding: 12px;
+    border-radius: 5px;
     box-shadow: var(--box-shadow);
     cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 .card:hover {
     background-color: #f7f7f7;
+    border-color: var(--border-color);
+}
+.card .card-title {
+    font-weight: 500;
 }
 .card-assignee {
     font-size: 0.8rem;
     color: #5e6c84;
-    margin-top: 8px;
 }
 .assign-form select {
     width: 100%;
@@ -314,4 +322,91 @@ body.board-active {
     font-size: 2rem;
     cursor: pointer;
     color: #888;
+}
+
+#modal-card-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1rem;
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* --- Responsive Tasarım (Media Queries) --- */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+
+    /* Header */
+    .main-header .container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .main-nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px 15px;
+    }
+    .user-greeting {
+        display: none; /* Küçük ekranlarda selamlamayı gizle */
+    }
+
+    /* Formlar */
+    .form-container {
+        padding: 20px;
+        margin: 20px auto;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .form-group .btn {
+        width: auto;
+        flex-shrink: 0;
+    }
+    .friends-page .form-group {
+        flex-direction: row;
+    }
+    .friends-page .form-group input {
+        flex-grow: 1;
+    }
+
+
+    /* Dashboard */
+    .project-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .project-item a {
+        width: 100%;
+    }
+    .delete-project-form {
+        width: 100%;
+    }
+    .delete-project-form button.btn-delete {
+        width: 100%;
+    }
+
+    /* Friends Page */
+    .friend-requests li, .friend-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .inline-form {
+        margin-left: 0;
+    }
+
+    /* Modal */
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
 }

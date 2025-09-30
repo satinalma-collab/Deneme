@@ -66,8 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_card'])) {
     $card_title = trim($_POST['card_title'] ?? '');
     $list_id = filter_input(INPUT_POST, 'list_id', FILTER_VALIDATE_INT);
     if (!empty($card_title) && $list_id) {
+        $new_card_id = empty($project['cards']) ? 1 : max(array_column($project['cards'], 'id')) + 1;
         $new_card = [
-            'id' => empty($project['cards']) ? 1 : max(array_column($project['cards'], 'id')) + 1,
+            'id' => $new_card_id,
             'list_id' => $list_id,
             'title' => $card_title,
             'description' => '',
@@ -78,7 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_card'])) {
         ];
         $all_projects[$project_key]['cards'][] = $new_card;
         if (write_db(PROJECTS_FILE, $all_projects)) {
-            header('Location: project.php?id=' . $project_id);
+            // Modal'ı otomatik açmak için parametre ile yönlendir
+            header('Location: ' . url('project.php?id=' . $project_id . '&open_card=' . $new_card_id));
             exit;
         }
     }
