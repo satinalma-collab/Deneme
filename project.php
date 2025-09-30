@@ -61,12 +61,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_list'])) {
     }
 }
 
-// Kart Ekleme
+// Kart Ekleme (Gelişmiş veri yapısıyla)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_card'])) {
-    $card_content = trim($_POST['card_content'] ?? '');
+    $card_title = trim($_POST['card_title'] ?? '');
     $list_id = filter_input(INPUT_POST, 'list_id', FILTER_VALIDATE_INT);
-    if (!empty($card_content) && $list_id) {
-        $new_card = ['id' => empty($project['cards']) ? 1 : max(array_column($project['cards'], 'id')) + 1, 'list_id' => $list_id, 'content' => $card_content, 'assigned_to' => null];
+    if (!empty($card_title) && $list_id) {
+        $new_card = [
+            'id' => empty($project['cards']) ? 1 : max(array_column($project['cards'], 'id')) + 1,
+            'list_id' => $list_id,
+            'title' => $card_title,
+            'description' => '',
+            'assigned_to' => null,
+            'dueDate' => null,
+            'labels' => [],
+            'comments' => []
+        ];
         $all_projects[$project_key]['cards'][] = $new_card;
         if (write_db(PROJECTS_FILE, $all_projects)) {
             header('Location: project.php?id=' . $project_id);
@@ -99,25 +108,23 @@ if ($is_owner && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_memb
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_card'])) {
     $card_id_to_assign = filter_input(INPUT_POST, 'card_id', FILTER_VALIDATE_INT);
     $member_id_to_assign = filter_input(INPUT_POST, 'member_id', FILTER_VALIDATE_INT);
-    $assigned_card_content = null;
+    $assigned_card_title = null;
     $previous_assignee = null;
 
     foreach ($all_projects[$project_key]['cards'] as &$card) {
         if ($card['id'] === $card_id_to_assign) {
             $previous_assignee = $card['assigned_to'];
-            $assigned_card_content = $card['content'];
+            $assigned_card_title = $card['title'];
             $card['assigned_to'] = ($member_id_to_assign == 0) ? null : $member_id_to_assign;
             break;
         }
     }
 
-    // Sadece atanan kişi değiştiyse ve yeni atanan kişi varsa bildirim gönder
     if ($member_id_to_assign != 0 && $member_id_to_assign != $previous_assignee) {
         $project_name = $project['name'];
-        $message = "Sana \"" . htmlspecialchars($project_name) . "\" projesinde yeni bir görev atandı: " . htmlspecialchars($assigned_card_content);
+        $message = "Sana \"" . htmlspecialchars($project_name) . "\" projesinde yeni bir görev atandı: " . htmlspecialchars($assigned_card_title);
         $link = "project.php?id=" . $project_id;
 
-        // Kullanıcı kendi kendine görev atarsa bildirim gönderme
         if ($member_id_to_assign != $current_user_id) {
             create_notification($member_id_to_assign, $message, $link);
         }
@@ -166,7 +173,7 @@ foreach ($project['members'] as $member_id) {
 </div>
 <?php endif; ?>
 
-<div class="board-container">
+<div class="board-container" data-project-id="<?php echo $project_id; ?>">
     <div class="lists-container">
         <?php foreach ($project['lists'] as $list): ?>
             <div class="list" data-list-id="<?php echo $list['id']; ?>">
@@ -174,8 +181,8 @@ foreach ($project['members'] as $member_id) {
                 <div class="cards">
                     <?php foreach ($project['cards'] as $card): ?>
                         <?php if ($card['list_id'] === $list['id']): ?>
-                            <div class="card" data-card-id="<?php echo $card['id']; ?>">
-                                <div class="card-content"><?php echo htmlspecialchars($card['content']); ?></div>
+                            <div class="card" data-card-id="<?php echo $card['id']; ?>" draggable="true">
+                                <div class="card-title"><?php echo htmlspecialchars($card['title']); ?></div>
                                 <?php if ($card['assigned_to']):
                                     $assignee = get_user_by_id($card['assigned_to']); ?>
                                     <div class="card-assignee">Atanan: <strong><?php echo htmlspecialchars($assignee['username']); ?></strong></div>
@@ -204,7 +211,7 @@ foreach ($project['members'] as $member_id) {
                 <div class="add-card-form-container">
                     <form action="project.php?id=<?php echo $project_id; ?>" method="post">
                         <input type="hidden" name="list_id" value="<?php echo $list['id']; ?>">
-                        <textarea name="card_content" placeholder="+ Yeni bir kart ekle..." required></textarea>
+                        <textarea name="card_title" placeholder="+ Yeni bir kart ekle..." required></textarea>
                         <button type="submit" name="add_card" class="btn-add-card">Ekle</button>
                     </form>
                 </div>

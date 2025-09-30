@@ -26,6 +26,7 @@ if(is_logged_in()) {
                 <ul>
                     <?php if (is_logged_in()): ?>
                         <li><a href="/dashboard.php">Kontrol Paneli</a></li>
+                        <li><a href="/friends.php">Arkadaşlar</a></li>
                         <li>
                             <a href="/notifications.php">
                                 Bildirimler

@@ -30,11 +30,13 @@ function register_user($username, $email, $password) {
 
     // Yeni kullanıcı oluştur
     $new_user = [
-        'id' => count($users) + 1, // Basit bir ID atama yöntemi
+        'id' => empty($users) ? 1 : max(array_column($users, 'id')) + 1,
         'username' => $username,
         'email' => $email,
         'password' => $hashed_password,
-        'friends' => []
+        'friends' => [],
+        'friend_requests_sent' => [],
+        'friend_requests_received' => []
     ];
 
     $users[] = $new_user;
