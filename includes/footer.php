@@ -16,5 +16,16 @@
         </div>
     </div>
 
+    <!-- Toast Bildirimleri için Konteyner -->
+    <div id="toast-container"></div>
+
+    <?php
+    // Session'da bir toast mesajı varsa, onu göster ve temizle
+    if (isset($_SESSION['toast_message'])) {
+        $toast_message = $_SESSION['toast_message'];
+        echo "<script>document.addEventListener('DOMContentLoaded', () => { showToast('" . addslashes($toast_message['text']) . "', '" . addslashes($toast_message['type']) . "'); });</script>";
+        unset($_SESSION['toast_message']);
+    }
+    ?>
 </body>
 </html>

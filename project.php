@@ -82,37 +82,6 @@ if ($is_owner && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_memb
     }
 }
 
-// Görev Atama
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_card'])) {
-    $card_id_to_assign = filter_input(INPUT_POST, 'card_id', FILTER_VALIDATE_INT);
-    $member_id_to_assign = filter_input(INPUT_POST, 'member_id', FILTER_VALIDATE_INT);
-    $assigned_card_title = null;
-    $previous_assignee = null;
-
-    foreach ($all_projects[$project_key]['cards'] as &$card) {
-        if ($card['id'] === $card_id_to_assign) {
-            $previous_assignee = $card['assigned_to'];
-            $assigned_card_title = $card['title'];
-            $card['assigned_to'] = ($member_id_to_assign == 0) ? null : $member_id_to_assign;
-            break;
-        }
-    }
-
-    if ($member_id_to_assign != 0 && $member_id_to_assign != $previous_assignee) {
-        $project_name = $project['name'];
-        $message = "Sana \"" . htmlspecialchars($project_name) . "\" projesinde yeni bir görev atandı: " . htmlspecialchars($assigned_card_title);
-        $link = "project.php?id=" . $project_id;
-
-        if ($member_id_to_assign != $current_user_id) {
-            create_notification($member_id_to_assign, $message, $link);
-        }
-    }
-
-    if (write_db(PROJECTS_FILE, $all_projects)) {
-        header('Location: project.php?id=' . $project_id);
-        exit;
-    }
-}
 
 
 // --- VERİ HAZIRLAMA ---
@@ -166,21 +135,17 @@ foreach ($project['members'] as $member_id) {
                                     <div class="card-assignee">Atanan: <strong><?php echo htmlspecialchars($assignee['username']); ?></strong></div>
                                 <?php endif; ?>
                                 <div class="card-actions">
-                                    <form action="<?php echo url('project.php?id=' . $project_id); ?>" method="post" class="assign-form">
-                                        <input type="hidden" name="card_id" value="<?php echo $card['id']; ?>">
-                                        <select name="member_id" onchange="this.form.submit()">
-                                            <option value="">Ata...</option>
-                                            <?php foreach ($project_members as $member): ?>
-                                                <option value="<?php echo $member['id']; ?>" <?php if ($card['assigned_to'] == $member['id']) echo 'selected'; ?>>
-                                                    <?php echo htmlspecialchars($member['username']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                            <?php if ($card['assigned_to']): ?>
-                                                <option value="0">Atamayı Kaldır</option>
-                                            <?php endif; ?>
-                                        </select>
-                                        <input type="hidden" name="assign_card" value="1">
-                                    </form>
+                                    <select class="assign-user-select" data-card-id="<?php echo $card['id']; ?>">
+                                        <option value="0">Ata...</option>
+                                        <?php foreach ($project_members as $member): ?>
+                                            <option value="<?php echo $member['id']; ?>" <?php if ($card['assigned_to'] == $member['id']) echo 'selected'; ?>>
+                                                <?php echo htmlspecialchars($member['username']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                        <?php if ($card['assigned_to']): ?>
+                                            <option value="0">Atamayı Kaldır</option>
+                                        <?php endif; ?>
+                                    </select>
                                 </div>
                             </div>
                         <?php endif; ?>

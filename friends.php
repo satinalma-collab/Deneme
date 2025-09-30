@@ -31,10 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_request'])) {
     $requester_id = filter_input(INPUT_POST, 'requester_id', FILTER_VALIDATE_INT);
     accept_friend_request($current_user_id, $requester_id);
-    $message = "Arkadaşlık isteği kabul edildi.";
-    $message_type = 'success';
-    // Sayfanın yeniden yüklenmesiyle verileri güncelle
-    header("Location: " . url('friends.php?accepted=true'));
+    $_SESSION['toast_message'] = ['text' => 'Arkadaşlık isteği kabul edildi.', 'type' => 'success'];
+    header("Location: " . url('friends.php'));
     exit;
 }
 
@@ -42,10 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_request'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['decline_request'])) {
     $requester_id = filter_input(INPUT_POST, 'requester_id', FILTER_VALIDATE_INT);
     decline_friend_request($current_user_id, $requester_id);
-    $message = "Arkadaşlık isteği reddedildi.";
-    $message_type = 'info';
-     // Sayfanın yeniden yüklenmesiyle verileri güncelle
-    header("Location: " . url('friends.php?declined=true'));
+    $_SESSION['toast_message'] = ['text' => 'Arkadaşlık isteği reddedildi.', 'type' => 'info'];
+    header("Location: " . url('friends.php'));
     exit;
 }
 

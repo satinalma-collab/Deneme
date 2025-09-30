@@ -65,7 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_project'])) {
         if ($project_to_delete && $project_to_delete['owner_id'] === $current_user_id) {
             $updated_projects = array_filter($projects_before_delete, fn($p) => $p['id'] !== $project_id_to_delete);
             write_db(PROJECTS_FILE, array_values($updated_projects));
-            header('Location: ' . url('dashboard.php?deleted=true'));
+            $_SESSION['toast_message'] = ['text' => 'Proje başarıyla silindi.', 'type' => 'success'];
+            header('Location: ' . url('dashboard.php'));
             exit;
         }
     }

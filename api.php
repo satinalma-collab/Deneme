@@ -201,6 +201,62 @@ switch ($action) {
         }
         break;
 
+    case 'assign_card':
+        $project_id = filter_var($request_data['projectId'] ?? 0, FILTER_VALIDATE_INT);
+        $card_id = filter_var($request_data['cardId'] ?? 0, FILTER_VALIDATE_INT);
+        $member_id = filter_var($request_data['memberId'] ?? 0, FILTER_VALIDATE_INT); // 0 atamayı kaldırmak için
+        $current_user_id = get_current_user_id();
+
+        if (!$project_id || !$card_id) {
+            $response['message'] = 'Eksik parametreler.';
+            break;
+        }
+
+        $all_projects = read_db(PROJECTS_FILE);
+        $project_key = null;
+        $project_name = '';
+
+        foreach ($all_projects as $key => $p) {
+            if ($p['id'] === $project_id) {
+                $project_key = $key;
+                $project_name = $p['name'];
+                break;
+            }
+        }
+
+        if ($project_key === null || !in_array($current_user_id, $all_projects[$project_key]['members'])) {
+            $response['message'] = 'Bu işlem için yetkiniz yok.';
+            break;
+        }
+
+        $card_updated = false;
+        $assigned_card_title = null;
+        $previous_assignee = null;
+
+        foreach ($all_projects[$project_key]['cards'] as &$card) {
+            if ($card['id'] === $card_id) {
+                $previous_assignee = $card['assigned_to'];
+                $assigned_card_title = $card['title'];
+                $card['assigned_to'] = ($member_id == 0) ? null : $member_id;
+                $card_updated = true;
+                break;
+            }
+        }
+
+        if ($card_updated && write_db(PROJECTS_FILE, $all_projects)) {
+            // Bildirim mantığı
+            if ($member_id != 0 && $member_id != $previous_assignee && $member_id != $current_user_id) {
+                require_once __DIR__ . '/php/notifications.php';
+                $message = "Sana \"" . htmlspecialchars($project_name) . "\" projesinde yeni bir görev atandı: " . htmlspecialchars($assigned_card_title);
+                $link = "project.php?id=" . $project_id;
+                create_notification($member_id, $message, $link);
+            }
+            $response = ['success' => true, 'message' => 'Görevli atandı.'];
+        } else {
+            $response['message'] = 'Görevli atanırken bir hata oluştu.';
+        }
+        break;
+
     default:
         $response['message'] = 'Bilinmeyen eylem.';
         break;
