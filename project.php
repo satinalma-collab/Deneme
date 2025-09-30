@@ -130,22 +130,22 @@ foreach ($project['members'] as $member_id) {
                         <?php if ($card['list_id'] === $list['id']): ?>
                             <div class="card task-card" data-card-id="<?php echo $card['id']; ?>" draggable="true">
                                 <div class="card-title"><?php echo htmlspecialchars($card['title']); ?></div>
-                                <?php if ($card['assigned_to']):
-                                    $assignee = get_user_by_id($card['assigned_to']); ?>
-                                    <div class="card-assignee">Atanan: <strong><?php echo htmlspecialchars($assignee['username']); ?></strong></div>
-                                <?php endif; ?>
-                                <div class="card-actions">
-                                    <select class="assign-user-select" data-card-id="<?php echo $card['id']; ?>">
-                                        <option value="0">Ata...</option>
-                                        <?php foreach ($project_members as $member): ?>
-                                            <option value="<?php echo $member['id']; ?>" <?php if ($card['assigned_to'] == $member['id']) echo 'selected'; ?>>
-                                                <?php echo htmlspecialchars($member['username']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                        <?php if ($card['assigned_to']): ?>
-                                            <option value="0">Atamayı Kaldır</option>
+                                <div class="card-footer">
+                                    <div class="card-assignees">
+                                        <?php if ($card['assigned_to']):
+                                            $assignee = get_user_by_id($card['assigned_to']);
+                                            if ($assignee): ?>
+                                                <div class="assignee-avatar" title="Atanan: <?php echo htmlspecialchars($assignee['username']); ?>">
+                                                    <?php echo strtoupper(substr($assignee['username'], 0, 1)); ?>
+                                                </div>
+                                            <?php endif; ?>
                                         <?php endif; ?>
-                                    </select>
+                                    </div>
+                                    <button class="btn-assign-user" data-card-id="<?php echo $card['id']; ?>" title="Görevli Ata">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -169,5 +169,10 @@ foreach ($project['members'] as $member_id) {
         </div>
     </div>
 </div>
+
+<script>
+    // Proje üyelerini JavaScript'in erişebileceği bir değişkene aktar
+    window.projectMembers = <?php echo json_encode($project_members); ?>;
+</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const boardContainer = document.querySelector('.board-container');
-    if (!boardContainer) return; // Sadece proje panosu sayfasında çalış
+    if (!boardContainer) return;
 
     const projectId = boardContainer.dataset.projectId;
 
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardToOpen = urlParams.get('open_card');
     if (cardToOpen) {
         openEditCardModal(cardToOpen);
-        window.history.replaceState({}, document.title, window.location.pathname + '?id=' + projectId);
+        window.history.replaceState({}, document.title, `${window.location.pathname}?id=${projectId}`);
     }
 
     // --- Olay Dinleyicileri ---
@@ -30,22 +30,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fonksiyonlar ---
 
-    // Mevcut tüm kartlara ve butonlara olay dinleyicilerini atar
     function initializeAllHandlers() {
         initializeDragAndDrop();
         initializeCardClickHandlers();
         initializeAddCardClickHandlers();
-        initializeAssignmentHandlers();
+        initializeAssignmentPopoverHandlers();
     }
 
+    // Olay delegasyonu ile sadece ana konteynere olay dinleyicileri ekle
     function initializeCardClickHandlers() {
-        document.querySelectorAll('.task-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                if (e.target.closest('.assign-user-select')) return;
-                const cardId = card.dataset.cardId;
-                openEditCardModal(cardId);
+        const listsContainer = document.querySelector('.lists-container');
+        if(listsContainer) {
+            listsContainer.addEventListener('click', e => {
+                const card = e.target.closest('.task-card');
+                // Sadece kartın kendisine tıklandığında ve atama butonu dışında bir yere tıklandığında modalı aç
+                if (card && !e.target.closest('.btn-assign-user')) {
+                    const cardId = card.dataset.cardId;
+                    openEditCardModal(cardId);
+                }
             });
-        });
+        }
     }
 
     function initializeAddCardClickHandlers() {
@@ -57,83 +61,94 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function initializeAssignmentHandlers() {
-        document.querySelectorAll('.assign-user-select').forEach(select => {
-            select.addEventListener('change', handleAssignmentChange);
-        });
+    function initializeAssignmentPopoverHandlers() {
+        const listsContainer = document.querySelector('.lists-container');
+        if(listsContainer) {
+            listsContainer.addEventListener('click', e => {
+                const assignButton = e.target.closest('.btn-assign-user');
+                if(assignButton) {
+                    e.stopPropagation(); // Kartın tıklama olayını tetiklemesini engelle
+                    const cardId = assignButton.dataset.cardId;
+                    openAssigneePopover(assignButton, cardId);
+                }
+            });
+        }
     }
 
-    function handleAssignmentChange(e) {
-        const select = e.target;
-        const cardId = select.dataset.cardId;
-        const memberId = select.value;
-        assignCardToUser(cardId, memberId, select);
+    function openAssigneePopover(button, cardId) {
+        closeExistingPopovers(); // Önceki popoverları kapat
+        const popover = document.createElement('div');
+        popover.className = 'assignee-popover';
+
+        let listItems = window.projectMembers.map(member => `
+            <li class="assignee-popover-item" data-member-id="${member.id}">
+                <div class="assignee-popover-avatar">${escapeHTML(member.username.charAt(0).toUpperCase())}</div>
+                <span>${escapeHTML(member.username)}</span>
+            </li>
+        `).join('');
+
+        // Atamayı kaldırma seçeneği
+        listItems += `<li class="assignee-popover-item" data-member-id="0" style="color: var(--accent-danger);">Atamayı Kaldır</li>`;
+
+        popover.innerHTML = `
+            <div class="assignee-popover-header">Üye Ata</div>
+            <ul class="assignee-popover-list">${listItems}</ul>
+        `;
+
+        document.body.appendChild(popover);
+        positionPopover(button, popover);
+
+        // Popover içindeki bir üyeye tıklandığında
+        popover.addEventListener('click', e => {
+            const item = e.target.closest('.assignee-popover-item');
+            if(item) {
+                const memberId = item.dataset.memberId;
+                assignCardToUser(cardId, memberId);
+                closeExistingPopovers();
+            }
+        });
+
+        // Dışarı tıklandığında popover'ı kapat
+        setTimeout(() => {
+            document.addEventListener('click', closePopoverOnClickOutside, { once: true });
+        }, 0);
+    }
+
+    function positionPopover(button, popover) {
+        const rect = button.getBoundingClientRect();
+        popover.style.left = `${rect.left}px`;
+        popover.style.top = `${rect.bottom + 8}px`;
+    }
+
+    function closeExistingPopovers() {
+        document.querySelectorAll('.assignee-popover').forEach(p => p.remove());
+    }
+
+    function closePopoverOnClickOutside(e) {
+        if (!e.target.closest('.assignee-popover')) {
+            closeExistingPopovers();
+        }
     }
 
     function initializeDragAndDrop() {
-        const cards = document.querySelectorAll('.card[draggable="true"]');
-        const lists = document.querySelectorAll('.list');
+        // Bu fonksiyonun içeriği değişmedi, önceki haliyle aynı kalıyor.
+        const listsContainer = document.querySelector('.lists-container');
+        if (!listsContainer) return;
         let draggedCard = null;
-
-        cards.forEach(card => {
-            card.addEventListener('dragstart', () => {
-                draggedCard = card;
-                setTimeout(() => card.style.opacity = '0.5', 0);
-            });
-            card.addEventListener('dragend', () => {
-                if(draggedCard) draggedCard.style.opacity = '1';
-            });
-        });
-
-        lists.forEach(list => {
-            list.addEventListener('dragover', e => {
-                e.preventDefault();
-                const afterElement = getDragAfterElement(list, e.clientY);
-                const cardsContainer = list.querySelector('.cards');
-                if (afterElement == null) {
-                    cardsContainer.appendChild(draggedCard);
-                } else {
-                    cardsContainer.insertBefore(draggedCard, afterElement);
-                }
-            });
-            list.addEventListener('drop', e => {
-                e.preventDefault();
-                if(!draggedCard) return;
-                const newListId = list.dataset.listId;
-                const cardId = draggedCard.dataset.cardId;
-                updateCardPosition(projectId, cardId, newListId);
-            });
-        });
+        listsContainer.addEventListener('dragstart', e => { if (e.target.classList.contains('task-card')) { draggedCard = e.target; setTimeout(() => { if(draggedCard) draggedCard.style.opacity = '0.5'; }, 0); } });
+        listsContainer.addEventListener('dragend', () => { if (draggedCard) { draggedCard.style.opacity = '1'; draggedCard = null; } });
+        listsContainer.addEventListener('dragover', e => { e.preventDefault(); const list = e.target.closest('.list'); if (!list || !draggedCard) return; const cardsContainer = list.querySelector('.cards'); const afterElement = getDragAfterElement(cardsContainer, e.clientY); if (afterElement == null) { cardsContainer.appendChild(draggedCard); } else { cardsContainer.insertBefore(draggedCard, afterElement); } });
+        listsContainer.addEventListener('drop', e => { e.preventDefault(); const list = e.target.closest('.list'); if (!list || !draggedCard) return; const newListId = list.dataset.listId; const cardId = draggedCard.dataset.cardId; updateCardPosition(projectId, cardId, newListId); });
     }
 
-    function getDragAfterElement(list, y) {
-        const draggableElements = [...list.querySelectorAll('.card:not([style*="opacity: 0.5"])')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.task-card:not([style*="opacity: 0.5"])')];
+        return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } else { return closest; } }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
     function openEditCardModal(cardId) {
-        fetch(BASE_URL + 'api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get_card_details', projectId, cardId })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                renderEditModalContent(data.card);
-                modal.style.display = 'flex';
-            } else {
-                showToast(data.message, 'danger');
-            }
-        });
+        fetch(`${BASE_URL}api.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_card_details', projectId, cardId }) })
+        .then(res => res.json()).then(data => { if (data.success) { renderEditModalContent(data.card); modal.style.display = 'flex'; } else { showToast(data.message, 'danger'); } });
     }
 
     function openAddCardModal(listId) {
@@ -144,34 +159,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- API Çağrıları ---
 
     function updateCardPosition(projectId, cardId, newListId) {
-        fetch(BASE_URL + 'api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'move_card', projectId, cardId, newListId })
-        }).then(res => res.json()).then(data => {
-            if (!data.success) console.error(data.message);
-        }).catch(err => console.error(err));
+        fetch(`${BASE_URL}api.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'move_card', projectId, cardId, newListId }) })
+        .then(res => res.json()).then(data => { if (!data.success) showToast(data.message, 'danger'); }).catch(err => console.error(err));
     }
 
-    function assignCardToUser(cardId, memberId, selectElement) {
-        fetch(BASE_URL + 'api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'assign_card', projectId, cardId, memberId })
-        })
-        .then(res => res.json())
-        .then(data => {
+    function assignCardToUser(cardId, memberId) {
+        fetch(`${BASE_URL}api.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'assign_card', projectId, cardId, memberId }) })
+        .then(res => res.json()).then(data => {
             if (data.success) {
-                const cardElement = document.querySelector(`.card[data-card-id="${cardId}"]`);
-                const assigneeDiv = cardElement.querySelector('.card-assignee');
-                if (memberId != '0') {
-                    const memberName = selectElement.options[selectElement.selectedIndex].text;
-                    assigneeDiv.innerHTML = `Atanan: <strong>${escapeHTML(memberName)}</strong>`;
-                    showToast('Görev başarıyla atandı.', 'success');
-                } else {
-                    assigneeDiv.innerHTML = '';
-                    showToast('Görev ataması kaldırıldı.', 'info');
-                }
+                updateCardAssigneeUI(cardId, memberId);
+                showToast(memberId != '0' ? 'Görev başarıyla atandı.' : 'Görev ataması kaldırıldı.', 'success');
             } else {
                 showToast(data.message, 'danger');
             }
@@ -179,131 +176,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCardDetails(cardId, title, description) {
-        fetch(BASE_URL + 'api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'update_card_details', projectId, cardId, title, description })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const cardOnBoard = document.querySelector(`.card[data-card-id="${cardId}"] .card-title`);
-                if (cardOnBoard) cardOnBoard.textContent = title;
-                modal.style.display = 'none';
-                showToast('Kart başarıyla güncellendi.', 'success');
-            } else {
-                showToast('Güncelleme hatası: ' + data.message, 'danger');
-            }
-        });
+        fetch(`${BASE_URL}api.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_card_details', projectId, cardId, title, description }) })
+        .then(res => res.json()).then(data => { if (data.success) { const cardOnBoard = document.querySelector(`.card[data-card-id="${cardId}"] .card-title`); if (cardOnBoard) cardOnBoard.textContent = title; modal.style.display = 'none'; showToast('Kart başarıyla güncellendi.', 'success'); } else { showToast('Güncelleme hatası: ' + data.message, 'danger'); } });
     }
 
     function addNewCard(listId, title, description) {
-        fetch(BASE_URL + 'api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'add_card', projectId, listId, title, description })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                createCardElement(data.card);
-                modal.style.display = 'none';
-                showToast('Kart başarıyla eklendi.', 'success');
-            } else {
-                showToast('Ekleme hatası: ' + data.message, 'danger');
-            }
-        });
+        fetch(`${BASE_URL}api.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_card', projectId, listId, title, description }) })
+        .then(res => res.json()).then(data => { if (data.success) { createCardElement(data.card); modal.style.display = 'none'; showToast('Kart başarıyla eklendi.', 'success'); } else { showToast('Ekleme hatası: ' + data.message, 'danger'); } });
     }
 
     // --- DOM Manipülasyonu ---
 
     function renderEditModalContent(card) {
-        modalContentWrapper.innerHTML = `
-            <form id="modal-card-form">
-                <h3>Görevi Düzenle</h3>
-                <div class="form-group">
-                    <label for="modal-card-title">Başlık</label>
-                    <input type="text" id="modal-card-title" name="title" value="${escapeHTML(card.title)}" required>
-                </div>
-                <div class="form-group">
-                    <label for="modal-card-description">Açıklama</label>
-                    <textarea id="modal-card-description" name="description" rows="6">${escapeHTML(card.description)}</textarea>
-                </div>
-                <button type="submit" class="btn">Kaydet</button>
-            </form>
-        `;
-
-        document.getElementById('modal-card-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newTitle = document.getElementById('modal-card-title').value;
-            const newDescription = document.getElementById('modal-card-description').value;
-            updateCardDetails(card.id, newTitle, newDescription);
-        });
+        modalContentWrapper.innerHTML = `<form id="modal-card-form"><h3>Görevi Düzenle</h3><div class="form-group"><label for="modal-card-title">Başlık</label><input type="text" id="modal-card-title" name="title" value="${escapeHTML(card.title)}" required></div><div class="form-group"><label for="modal-card-description">Açıklama</label><textarea id="modal-card-description" name="description" rows="6">${escapeHTML(card.description)}</textarea></div><button type="submit" class="btn">Kaydet</button></form>`;
+        document.getElementById('modal-card-form').addEventListener('submit', (e) => { e.preventDefault(); updateCardDetails(card.id, document.getElementById('modal-card-title').value, document.getElementById('modal-card-description').value); });
     }
 
     function renderAddModalContent(listId) {
-        modalContentWrapper.innerHTML = `
-            <form id="modal-add-card-form">
-                <h3>Yeni Kart Ekle</h3>
-                <div class="form-group">
-                    <label for="modal-new-card-title">Başlık</label>
-                    <input type="text" id="modal-new-card-title" name="title" required>
-                </div>
-                <div class="form-group">
-                    <label for="modal-new-card-description">Açıklama</label>
-                    <textarea id="modal-new-card-description" name="description" rows="6"></textarea>
-                </div>
-                <button type="submit" class="btn">Kartı Oluştur</button>
-            </form>
-        `;
+        modalContentWrapper.innerHTML = `<form id="modal-add-card-form"><h3>Yeni Kart Ekle</h3><div class="form-group"><label for="modal-new-card-title">Başlık</label><input type="text" id="modal-new-card-title" name="title" required></div><div class="form-group"><label for="modal-new-card-description">Açıklama</label><textarea id="modal-new-card-description" name="description" rows="6"></textarea></div><button type="submit" class="btn">Kartı Oluştur</button></form>`;
+        document.getElementById('modal-add-card-form').addEventListener('submit', (e) => { e.preventDefault(); addNewCard(listId, document.getElementById('modal-new-card-title').value, document.getElementById('modal-new-card-description').value); });
+    }
 
-        document.getElementById('modal-add-card-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const title = document.getElementById('modal-new-card-title').value;
-            const description = document.getElementById('modal-new-card-description').value;
-            addNewCard(listId, title, description);
-        });
+    function updateCardAssigneeUI(cardId, memberId) {
+        const cardElement = document.querySelector(`.card[data-card-id="${cardId}"]`);
+        if (!cardElement) return;
+        const assigneesContainer = cardElement.querySelector('.card-assignees');
+        assigneesContainer.innerHTML = ''; // Mevcut avatarı temizle
+        if (memberId && memberId != '0') {
+            const member = window.projectMembers.find(m => m.id == memberId);
+            if (member) {
+                const avatar = document.createElement('div');
+                avatar.className = 'assignee-avatar';
+                avatar.title = `Atanan: ${escapeHTML(member.username)}`;
+                avatar.textContent = member.username.charAt(0).toUpperCase();
+                assigneesContainer.appendChild(avatar);
+            }
+        }
     }
 
     function createCardElement(cardData) {
         const listContainer = document.querySelector(`.list[data-list-id="${cardData.list_id}"] .cards`);
         if (!listContainer) return;
-
         const cardEl = document.createElement('div');
         cardEl.className = 'card task-card';
         cardEl.dataset.cardId = cardData.id;
         cardEl.draggable = true;
-
-        const firstSelect = document.querySelector('.assign-user-select');
-        let optionsHTML = '<option value="0">Ata...</option>';
-        if (firstSelect) {
-            const memberOptions = firstSelect.querySelectorAll('option[value]:not([value="0"])');
-            memberOptions.forEach(opt => {
-                if (opt.text !== "Atamayı Kaldır") {
-                     optionsHTML += opt.outerHTML;
-                }
-            });
-        }
-
-        cardEl.innerHTML = `
-            <div class="card-title">${escapeHTML(cardData.title)}</div>
-            <div class="card-assignee"></div>
-            <div class="card-actions">
-                <select class="assign-user-select" data-card-id="${cardData.id}">
-                    ${optionsHTML}
-                </select>
-            </div>
-        `;
-
+        cardEl.innerHTML = `<div class="card-title">${escapeHTML(cardData.title)}</div><div class="card-footer"><div class="card-assignees"></div><button class="btn-assign-user" data-card-id="${cardData.id}" title="Görevli Ata"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg></button></div>`;
         listContainer.appendChild(cardEl);
-
-        // Yeni karta da olay dinleyicileri ekle
-        cardEl.addEventListener('dragstart', () => { /* ... */ }); // Basitleştirilmiş, tam sürükle-bırak yeniden başlatılmalı
-        cardEl.addEventListener('click', (e) => {
-            if (e.target.closest('.assign-user-select')) return;
-            openEditCardModal(cardData.id);
-        });
-        cardEl.querySelector('.assign-user-select').addEventListener('change', handleAssignmentChange);
     }
 
     function escapeHTML(str) {
@@ -315,21 +234,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Toast Bildirim Fonksiyonu ---
     function showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
+        if(!container) return;
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
-
         container.appendChild(toast);
-
-        // Animasyon için kısa bir gecikme
         setTimeout(() => {
             toast.classList.add('show');
         }, 100);
-
-        // 5 saniye sonra tostu kaldır
         setTimeout(() => {
             toast.classList.remove('show');
-            // Animasyon bittikten sonra DOM'dan kaldır
             toast.addEventListener('transitionend', () => toast.remove());
         }, 5000);
     }

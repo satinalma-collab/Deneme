@@ -319,26 +319,114 @@ body.board-active {
 }
 /* Kart Tasarımı */
 .task-card {
-    background-color: #2C3242; /* Yüzeyden biraz daha farklı */
-    padding: 16px;
+    background-color: var(--bg-surface);
+    padding: 12px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-sm);
     cursor: pointer;
-    border: 1px solid var(--border-color);
     transition: box-shadow 0.2s, background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 .task-card:hover {
-    background-color: #364052;
+    background-color: var(--bg-surface-hover);
     box-shadow: var(--shadow-md);
 }
 .task-card .card-title {
     font-weight: 500;
-    margin-bottom: 8px;
     color: var(--text-primary);
 }
-.card-assignee {
-    font-size: 0.8rem;
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    min-height: 28px; /* To prevent layout shift */
+}
+.card-assignees {
+    display: flex;
+    align-items: center;
+}
+.assignee-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--accent-primary);
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 2px solid var(--bg-surface);
+}
+.btn-assign-user {
+    background: transparent;
+    border: none;
     color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+.btn-assign-user:hover {
+    background-color: var(--bg-surface-hover);
+    color: var(--text-primary);
+}
+
+/* Atama Popover Menüsü */
+.assignee-popover {
+    position: absolute;
+    background-color: var(--bg-surface-hover);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    z-index: 1100;
+    width: 250px;
+    padding: 8px;
+}
+.assignee-popover-header {
+    padding: 8px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+.assignee-popover-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.assignee-popover-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.assignee-popover-item:hover {
+    background-color: var(--accent-primary);
+    color: var(--text-light);
+}
+.assignee-popover-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--accent-primary);
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.8rem;
 }
 .btn-open-add-card-modal {
     width: 100%;
