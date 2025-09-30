@@ -40,7 +40,7 @@ include __DIR__ . '/includes/header.php';
         </div>
     <?php endif; ?>
 
-    <form action="register.php" method="post">
+    <form action="<?php echo url('register.php'); ?>" method="post">
         <div class="form-group">
             <label for="username">Kullanıcı Adı</label>
             <input type="text" id="username" name="username" required>
@@ -57,7 +57,7 @@ include __DIR__ . '/includes/header.php';
             <button type="submit" class="btn">Kayıt Ol</button>
         </div>
     </form>
-    <p class="form-footer">Zaten bir hesabınız var mı? <a href="login.php">Giriş Yapın</a></p>
+    <p class="form-footer">Zaten bir hesabınız var mı? <a href="<?php echo url('login.php'); ?>">Giriş Yapın</a></p>
 </div>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

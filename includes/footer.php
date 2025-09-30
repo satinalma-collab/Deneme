@@ -4,7 +4,7 @@
             <p>&copy; <?php echo date('Y'); ?> Hasello. Tüm hakları saklıdır.</p>
         </div>
     </footer>
-    <script src="/js/script.js"></script>
+    <script src="<?php echo url('js/script.js'); ?>"></script>
 
     <!-- Kart Detayları için Modal Pencere -->
     <div id="card-modal" class="modal-overlay" style="display: none;">

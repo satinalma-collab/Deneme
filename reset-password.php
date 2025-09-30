@@ -71,7 +71,7 @@ if ($token_is_valid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['re
 
     <?php if (!$token_is_valid): ?>
         <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
-        <p class="form-footer"><a href="forgot-password.php">Yeni bir sıfırlama bağlantısı talep et</a></p>
+        <p class="form-footer"><a href="<?php echo url('forgot-password.php'); ?>">Yeni bir sıfırlama bağlantısı talep et</a></p>
     <?php else: ?>
         <p>Lütfen yeni parolanızı girin.</p>
 
@@ -79,7 +79,7 @@ if ($token_is_valid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['re
             <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>
 
-        <form action="reset-password.php?token=<?php echo htmlspecialchars($token); ?>" method="post">
+        <form action="<?php echo url('reset-password.php?token=' . htmlspecialchars($token)); ?>" method="post">
             <div class="form-group">
                 <label for="password">Yeni Parola</label>
                 <input type="password" id="password" name="password" required>

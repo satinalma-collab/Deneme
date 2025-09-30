@@ -69,7 +69,7 @@ foreach ($current_user_data['friends'] as $friend_id) {
     <!-- 1. Arkadaş Ekle -->
     <div class="card form-container">
         <h3>Yeni Arkadaş Ekle</h3>
-        <form action="friends.php" method="post">
+        <form action="<?php echo url('friends.php'); ?>" method="post">
             <div class="form-group">
                 <input type="email" name="email" placeholder="Arkadaşının e-posta adresini gir..." required>
                 <button type="submit" name="send_request" class="btn">İstek Gönder</button>
@@ -87,7 +87,7 @@ foreach ($current_user_data['friends'] as $friend_id) {
                 <?php foreach ($friend_requests as $requester): ?>
                     <li>
                         <span><?php echo htmlspecialchars($requester['username']); ?></span>
-                        <form action="friends.php" method="post" class="inline-form">
+                        <form action="<?php echo url('friends.php'); ?>" method="post" class="inline-form">
                             <input type="hidden" name="requester_id" value="<?php echo $requester['id']; ?>">
                             <button type="submit" name="handle_request" value="accept" class="btn btn-success">Kabul Et</button>
                             <button type="submit" name="handle_request" value="decline" class="btn btn-danger">Reddet</button>

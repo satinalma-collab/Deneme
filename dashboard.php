@@ -60,7 +60,7 @@ foreach ($all_projects as $project) {
 <!-- Yeni Proje Oluşturma Formu -->
 <div class="card form-container">
     <h3>Yeni Proje Oluştur</h3>
-    <form action="dashboard.php" method="post">
+    <form action="<?php echo url('dashboard.php'); ?>" method="post">
         <div class="form-group">
             <input type="text" name="project_name" placeholder="Projenizin adını girin..." required>
             <button type="submit" name="create_project" class="btn">Oluştur</button>
@@ -77,7 +77,7 @@ foreach ($all_projects as $project) {
         <ul>
             <?php foreach ($user_projects as $project): ?>
                 <li>
-                    <a href="project.php?id=<?php echo $project['id']; ?>">
+                    <a href="<?php echo url('project.php?id=' . $project['id']); ?>">
                         <?php echo htmlspecialchars($project['name']); ?>
                     </a>
                 </li>

@@ -162,7 +162,7 @@ foreach ($project['members'] as $member_id) {
 <?php if ($is_owner): ?>
 <div class="card form-container member-management">
     <h3>Üye Ekle</h3>
-    <form action="project.php?id=<?php echo $project_id; ?>" method="post">
+    <form action="<?php echo url('project.php?id=' . $project_id); ?>" method="post">
         <div class="form-group">
             <input type="email" name="member_email" placeholder="Kullanıcının e-posta adresini girin..." required>
             <button type="submit" name="add_member" class="btn">Ekle</button>
@@ -188,7 +188,7 @@ foreach ($project['members'] as $member_id) {
                                     <div class="card-assignee">Atanan: <strong><?php echo htmlspecialchars($assignee['username']); ?></strong></div>
                                 <?php endif; ?>
                                 <div class="card-actions">
-                                    <form action="project.php?id=<?php echo $project_id; ?>" method="post" class="assign-form">
+                                    <form action="<?php echo url('project.php?id=' . $project_id); ?>" method="post" class="assign-form">
                                         <input type="hidden" name="card_id" value="<?php echo $card['id']; ?>">
                                         <select name="member_id" onchange="this.form.submit()">
                                             <option value="">Ata...</option>
@@ -209,7 +209,7 @@ foreach ($project['members'] as $member_id) {
                     <?php endforeach; ?>
                 </div>
                 <div class="add-card-form-container">
-                    <form action="project.php?id=<?php echo $project_id; ?>" method="post">
+                    <form action="<?php echo url('project.php?id=' . $project_id); ?>" method="post">
                         <input type="hidden" name="list_id" value="<?php echo $list['id']; ?>">
                         <textarea name="card_title" placeholder="+ Yeni bir kart ekle..." required></textarea>
                         <button type="submit" name="add_card" class="btn-add-card">Ekle</button>
@@ -218,7 +218,7 @@ foreach ($project['members'] as $member_id) {
             </div>
         <?php endforeach; ?>
         <div class="list add-new-list">
-            <form action="project.php?id=<?php echo $project_id; ?>" method="post">
+            <form action="<?php echo url('project.php?id=' . $project_id); ?>" method="post">
                 <input type="text" name="list_name" placeholder="+ Yeni bir liste ekle" required>
                 <button type="submit" name="add_list" class="btn-add-list">Ekle</button>
             </form>

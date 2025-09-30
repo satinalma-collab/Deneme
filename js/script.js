@@ -81,8 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCardPosition(projectId, cardId, newListId) {
-        // API çağrısı (önceki kodla aynı)
-        fetch('/api.php', {
+        fetch(BASE_URL + 'api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'move_card', projectId, cardId, newListId })
@@ -92,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openCardModal(cardId) {
-        fetch('/api.php', {
+        fetch(BASE_URL + 'api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'get_card_details', projectId, cardId })
@@ -134,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCardDetails(cardId, title, description) {
-        fetch('/api.php', {
+        fetch(BASE_URL + 'api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

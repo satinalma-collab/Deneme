@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reset_link'])) {
         </div>
     <?php endif; ?>
 
-    <form action="forgot-password.php" method="post">
+    <form action="<?php echo url('forgot-password.php'); ?>" method="post">
         <div class="form-group">
             <label for="email">E-posta Adresiniz</label>
             <input type="email" id="email" name="email" required>
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reset_link'])) {
             <button type="submit" name="send_reset_link" class="btn">Sıfırlama Bağlantısı Gönder</button>
         </div>
     </form>
-    <p class="form-footer"><a href="login.php">Giriş ekranına dön</a></p>
+    <p class="form-footer"><a href="<?php echo url('login.php'); ?>">Giriş ekranına dön</a></p>
 </div>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
