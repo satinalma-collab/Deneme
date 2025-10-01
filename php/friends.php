@@ -42,6 +42,11 @@ function send_friend_request($sender_id, $receiver_email) {
         return "Bu kullanıcıya zaten bir istek göndermişsiniz.";
     }
 
+    // Yeni kontrol: Alıcı, gönderene zaten bir istek göndermiş mi?
+    if (in_array($sender_id, $users[$receiver_key]['friend_requests_received'])) {
+        return "Bu kullanıcı size zaten bir arkadaşlık isteği göndermiş. Lütfen gelen isteklerinizi kontrol edin.";
+    }
+
     // İsteği gönderen ve alan taraflara kaydet
     $users[$sender_key]['friend_requests_sent'][] = $receiver['id'];
     $users[$receiver_key]['friend_requests_received'][] = $sender_id;
