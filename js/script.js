@@ -5,15 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const projectId = boardContainer.dataset.projectId;
 
-    // --- Sayfa Yükleme Mantığı ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const cardToOpen = urlParams.get('open_card');
-    if (cardToOpen) {
-        openEditCardModal(cardToOpen);
-        window.history.replaceState({}, document.title, `${window.location.pathname}?id=${projectId}`);
-    }
-
-    // --- Olay Dinleyicileri ---
+    // --- Olay Yöneticileri (Event Handlers) ---
     initializeAllHandlers();
 
     // --- Modal Yönetimi ---
@@ -30,53 +22,111 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fonksiyonlar ---
 
+    // Tüm olay dinleyicilerini merkezi bir yerden başlatır
     function initializeAllHandlers() {
-        initializeDragAndDrop();
-        initializeCardClickHandlers();
-        initializeAddCardClickHandlers();
-        initializeAssignmentPopoverHandlers();
+        const listsContainer = document.querySelector('.lists-container');
+        if (!listsContainer) return;
+
+        // Olay Delegasyonu: Tüm olayları ana konteyner üzerinden yönet
+        listsContainer.addEventListener('click', handleContainerClick);
+        listsContainer.addEventListener('dragstart', handleDragStart);
+        listsContainer.addEventListener('dragend', handleDragEnd);
+        listsContainer.addEventListener('dragover', handleDragOver);
+        listsContainer.addEventListener('drop', handleDrop);
     }
 
-    // Olay delegasyonu ile sadece ana konteynere olay dinleyicileri ekle
-    function initializeCardClickHandlers() {
-        const listsContainer = document.querySelector('.lists-container');
-        if(listsContainer) {
-            listsContainer.addEventListener('click', e => {
-                const card = e.target.closest('.task-card');
-                // Sadece kartın kendisine tıklandığında ve atama butonu dışında bir yere tıklandığında modalı aç
-                if (card && !e.target.closest('.btn-assign-user')) {
-                    const cardId = card.dataset.cardId;
-                    openEditCardModal(cardId);
-                }
-            });
+    // --- Olay Fonksiyonları (Event Handlers) ---
+
+    let draggedCard = null;
+
+    function handleContainerClick(e) {
+        // Kart düzenleme modalını aç
+        const card = e.target.closest('.task-card');
+        if (card && !e.target.closest('.btn-assign-user')) {
+            const cardId = card.dataset.cardId;
+            openEditCardModal(cardId);
+            return;
+        }
+
+        // Yeni kart ekleme modalını aç
+        const addCardButton = e.target.closest('.btn-open-add-card-modal');
+        if (addCardButton) {
+            const listId = addCardButton.dataset.listId;
+            openAddCardModal(listId);
+            return;
+        }
+
+        // Atama popover'ını aç
+        const assignButton = e.target.closest('.btn-assign-user');
+        if(assignButton) {
+            e.stopPropagation();
+            const cardId = assignButton.dataset.cardId;
+            openAssigneePopover(assignButton, cardId);
+            return;
         }
     }
 
-    function initializeAddCardClickHandlers() {
-        document.querySelectorAll('.btn-open-add-card-modal').forEach(button => {
-            button.addEventListener('click', () => {
-                const listId = button.dataset.listId;
-                openAddCardModal(listId);
-            });
-        });
-    }
-
-    function initializeAssignmentPopoverHandlers() {
-        const listsContainer = document.querySelector('.lists-container');
-        if(listsContainer) {
-            listsContainer.addEventListener('click', e => {
-                const assignButton = e.target.closest('.btn-assign-user');
-                if(assignButton) {
-                    e.stopPropagation(); // Kartın tıklama olayını tetiklemesini engelle
-                    const cardId = assignButton.dataset.cardId;
-                    openAssigneePopover(assignButton, cardId);
-                }
-            });
+    function handleDragStart(e) {
+        if (e.target.classList.contains('task-card')) {
+            draggedCard = e.target;
+            setTimeout(() => {
+                draggedCard.classList.add('is-dragging');
+            }, 0);
         }
     }
+
+    function handleDragEnd(e) {
+        if (draggedCard) {
+            draggedCard.classList.remove('is-dragging');
+            draggedCard = null;
+        }
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        if (!draggedCard) return;
+
+        const list = e.target.closest('.list');
+        if (list) {
+            const cardsContainer = list.querySelector('.cards');
+            const afterElement = getDragAfterElement(cardsContainer, e.clientY);
+            if (afterElement == null) {
+                cardsContainer.appendChild(draggedCard);
+            } else {
+                cardsContainer.insertBefore(draggedCard, afterElement);
+            }
+        }
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        if (!draggedCard) return;
+
+        const list = e.target.closest('.list');
+        if (list) {
+            const newListId = list.dataset.listId;
+            const cardId = draggedCard.dataset.cardId;
+            updateCardPosition(projectId, cardId, newListId);
+        }
+    }
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.task-card:not(.is-dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // --- Popover Yönetimi ---
 
     function openAssigneePopover(button, cardId) {
-        closeExistingPopovers(); // Önceki popoverları kapat
+        closeExistingPopovers();
         const popover = document.createElement('div');
         popover.className = 'assignee-popover';
 
@@ -86,32 +136,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span>${escapeHTML(member.username)}</span>
             </li>
         `).join('');
-
-        // Atamayı kaldırma seçeneği
         listItems += `<li class="assignee-popover-item" data-member-id="0" style="color: var(--accent-danger);">Atamayı Kaldır</li>`;
 
-        popover.innerHTML = `
-            <div class="assignee-popover-header">Üye Ata</div>
-            <ul class="assignee-popover-list">${listItems}</ul>
-        `;
-
+        popover.innerHTML = `<div class="assignee-popover-header">Üye Ata</div><ul class="assignee-popover-list">${listItems}</ul>`;
         document.body.appendChild(popover);
         positionPopover(button, popover);
 
-        // Popover içindeki bir üyeye tıklandığında
         popover.addEventListener('click', e => {
             const item = e.target.closest('.assignee-popover-item');
             if(item) {
-                const memberId = item.dataset.memberId;
-                assignCardToUser(cardId, memberId);
+                assignCardToUser(cardId, item.dataset.memberId);
                 closeExistingPopovers();
             }
         });
 
-        // Dışarı tıklandığında popover'ı kapat
-        setTimeout(() => {
-            document.addEventListener('click', closePopoverOnClickOutside, { once: true });
-        }, 0);
+        setTimeout(() => document.addEventListener('click', closePopoverOnClickOutside, { once: true }), 0);
     }
 
     function positionPopover(button, popover) {
@@ -130,21 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function initializeDragAndDrop() {
-        // Bu fonksiyonun içeriği değişmedi, önceki haliyle aynı kalıyor.
-        const listsContainer = document.querySelector('.lists-container');
-        if (!listsContainer) return;
-        let draggedCard = null;
-        listsContainer.addEventListener('dragstart', e => { if (e.target.classList.contains('task-card')) { draggedCard = e.target; setTimeout(() => { if(draggedCard) draggedCard.style.opacity = '0.5'; }, 0); } });
-        listsContainer.addEventListener('dragend', () => { if (draggedCard) { draggedCard.style.opacity = '1'; draggedCard = null; } });
-        listsContainer.addEventListener('dragover', e => { e.preventDefault(); const list = e.target.closest('.list'); if (!list || !draggedCard) return; const cardsContainer = list.querySelector('.cards'); const afterElement = getDragAfterElement(cardsContainer, e.clientY); if (afterElement == null) { cardsContainer.appendChild(draggedCard); } else { cardsContainer.insertBefore(draggedCard, afterElement); } });
-        listsContainer.addEventListener('drop', e => { e.preventDefault(); const list = e.target.closest('.list'); if (!list || !draggedCard) return; const newListId = list.dataset.listId; const cardId = draggedCard.dataset.cardId; updateCardPosition(projectId, cardId, newListId); });
-    }
-
-    function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.task-card:not([style*="opacity: 0.5"])')];
-        return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } else { return closest; } }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
+    // --- Modal Açma Fonksiyonları ---
 
     function openEditCardModal(cardId) {
         fetch(`${BASE_URL}api.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_card_details', projectId, cardId }) })
@@ -201,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cardElement = document.querySelector(`.card[data-card-id="${cardId}"]`);
         if (!cardElement) return;
         const assigneesContainer = cardElement.querySelector('.card-assignees');
-        assigneesContainer.innerHTML = ''; // Mevcut avatarı temizle
+        assigneesContainer.innerHTML = '';
         if (memberId && memberId != '0') {
             const member = window.projectMembers.find(m => m.id == memberId);
             if (member) {
@@ -221,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cardEl.className = 'card task-card';
         cardEl.dataset.cardId = cardData.id;
         cardEl.draggable = true;
-        cardEl.innerHTML = `<div class="card-title">${escapeHTML(cardData.title)}</div><div class="card-footer"><div class="card-assignees"></div><button class="btn-assign-user" data-card-id="${cardData.id}" title="Görevli Ata"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg></button></div>`;
+        cardEl.innerHTML = `<div class="card-title">${escapeHTML(cardData.title)}</div><div class="card-footer"><div class="card-assignees"></div><button class="btn-assign-user" data-card-id="${cardData.id}" title="Görevli Ata"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg></button></div>`;
         listContainer.appendChild(cardEl);
     }
 
